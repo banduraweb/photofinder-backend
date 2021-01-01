@@ -17,6 +17,14 @@ class Validation {
     });
     return schema.validate(body);
   }
+  static resetPasswordValidation(body) {
+    const schema = Joi.object({
+      email: Joi.string().min(3).required().email(),
+      password: Joi.string().min(3).required(),
+      oldpassword: Joi.string().min(3).required(),
+    });
+    return schema.validate(body);
+  }
   static photoValidation(body) {
     const schema = Joi.object({
       userId: Joi.string().required(),

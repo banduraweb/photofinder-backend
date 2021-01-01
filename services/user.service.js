@@ -88,6 +88,49 @@ class UserService {
       return SystemErrorService.error("An Internal error", errorTypes.Internal);
     }
   }
+  static async resetPassword(userId, email, password, oldpassword) {
+    const { error } = Validation.resetPasswordValidation({
+      email,
+      password,
+      oldpassword,
+    });
+
+    if (error) {
+      return SystemErrorService.error(
+        "Validations errors",
+        errorTypes.Validation
+      );
+    }
+
+    try {
+      const filter = {
+        $and: [{ _id: { $eq: userId } }, { email: { $eq: email } }],
+      };
+      const isExists = await User.findOne(filter);
+      if (!isExists) {
+        return SystemErrorService.error(
+          "User was not found",
+          errorTypes.NotFound
+        );
+      }
+      const isMatchedPassword = await bcrypt.compare(
+        oldpassword,
+        isExists.password
+      );
+      if (isMatchedPassword) {
+        const newPassword = await bcrypt.hash(password, 12);
+        await User.update(filter, { $set: { password: newPassword } });
+        return { message: "password changed successfully!" };
+      } else {
+        return SystemErrorService.error(
+          "Wrong old password",
+          errorTypes.Forbidden
+        );
+      }
+    } catch (e) {
+      return SystemErrorService.error("An Internal error", errorTypes.Internal);
+    }
+  }
 }
 
 module.exports = UserService;

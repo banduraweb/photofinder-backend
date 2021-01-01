@@ -53,21 +53,17 @@ class KeyWordService {
     }
   }
   static async KeywordUpdateCounter(userId, keyword) {
-   try {
-     const filter = {
-       $and: [
-         { keyword: { $eq: keyword } },
-         { usedBy: { $eq: ObjectId(userId) } },
-       ],
-     };
-     return await Keyword.update(
-       filter,
-       { $inc: { usedTimes: 1 } }
-     );
-   } catch (e) {
-     return SystemErrorService.error("An Internal error", errorTypes.Internal);
-
-   }
+    try {
+      const filter = {
+        $and: [
+          { keyword: { $eq: keyword } },
+          { usedBy: { $eq: ObjectId(userId) } },
+        ],
+      };
+      return await Keyword.update(filter, { $inc: { usedTimes: 1 } });
+    } catch (e) {
+      return SystemErrorService.error("An Internal error", errorTypes.Internal);
+    }
   }
 }
 
