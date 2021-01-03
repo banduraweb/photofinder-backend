@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const errorTypes = require("../constants/errors");
 const User = require("../models/User");
+const Token = require("../models/Token");
 const SystemErrorService = require("./errors.service");
 const Validation = require("./validation.service");
 require("dotenv").config();
@@ -69,22 +70,72 @@ class UserService {
         );
       }
 
-      const token = jwt.sign(
+      const token = await this.createToken(user);
+      const refreshToken = await this.refreshToken(user);
+      return {token, refreshToken}
+    } catch (e) {
+      return SystemErrorService.error("An Internal error", errorTypes.Internal);
+    }
+  }
+  static async logout(refreshToken){
+    try {
+      await Token.findOneAndDelete({ token: refreshToken });
+      return { message: "User logged out!" };
+    } catch (e) {
+      return SystemErrorService.error("An Internal error", errorTypes.Internal);
+
+    }
+  }
+  static async createToken(user){
+    try {
+      const token =  jwt.sign(
         {
           userId: user.id,
           app: "photofinder",
           name: user.name,
-          email,
+          email: user.email,
           createdAt: user.createdAt,
+          type: 'access'
         },
         process.env.jwtKey,
+        {
+          expiresIn: "1m",
+        }
+      );
+      return token
+    } catch (e) {
+      if(e instanceof jwt.TokenExpiredError) {
+        return SystemErrorService.error("Token expired", errorTypes.Token);
+      } else if(e instanceof jwt.JsonWebTokenError) {
+        return SystemErrorService.error("Invalid token", errorTypes.Token);
+      }
+      return SystemErrorService.error("An Internal error", errorTypes.Internal);
+    }
+  }
+  static async refreshToken(user){
+    try {
+      const refreshToken =  jwt.sign(
+        {
+          userId: user.id,
+          app: "photofinder",
+          name: user.name,
+          email: user.email,
+          createdAt: user.createdAt,
+          type: 'refresh'
+        },
+        process.env.REFRESH_TOKEN_SECRET,
         {
           expiresIn: "24h",
         }
       );
-
-      return { token, userId: user._id };
+      await new Token({ token: refreshToken }).save();
+      return refreshToken
     } catch (e) {
+      if(e instanceof jwt.TokenExpiredError) {
+        return SystemErrorService.error("Token expired", errorTypes.Token);
+      } else if(e instanceof jwt.JsonWebTokenError) {
+        return SystemErrorService.error("Invalid token", errorTypes.Token);
+      }
       return SystemErrorService.error("An Internal error", errorTypes.Internal);
     }
   }
@@ -120,12 +171,35 @@ class UserService {
       if (isMatchedPassword) {
         const newPassword = await bcrypt.hash(password, 12);
         await User.update(filter, { $set: { password: newPassword } });
-        return { message: "password changed successfully!" };
+        return {message: "password changed successfully!"}
       } else {
         return SystemErrorService.error(
           "Wrong old password",
           errorTypes.Forbidden
         );
+      }
+    } catch (e) {
+      return SystemErrorService.error("An Internal error", errorTypes.Internal);
+    }
+  }
+  static async generateRefreshToken(refreshToken){
+    try {
+      if (!refreshToken) {
+        return SystemErrorService.error("Access denied,token missing!", errorTypes.Token);
+      } else {
+        const tokenDoc = await Token.findOne({ token: refreshToken });
+        if (!tokenDoc) {
+          return SystemErrorService.error("Token expired!", errorTypes.Token);
+        } else {
+          const payload = jwt.verify(tokenDoc.token, process.env.REFRESH_TOKEN_SECRET);
+
+          const {app, email, name, userId, createdAt, type} = payload;
+
+          const token = jwt.sign({app, email, name, userId, createdAt, type}, process.env.jwtKey, {
+            expiresIn: "1m",
+          });
+          return {token}
+        }
       }
     } catch (e) {
       return SystemErrorService.error("An Internal error", errorTypes.Internal);

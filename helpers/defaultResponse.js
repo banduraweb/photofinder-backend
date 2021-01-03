@@ -15,6 +15,8 @@ module.exports = {
           return res.status(409).json({ error: message });
         case errorTypes.Validation:
           return res.status(400).json({ error: message });
+        case errorTypes.Token:
+          return res.status(403).json({ error: message });
         default:
           return res.status(404).json({ error: message });
       }

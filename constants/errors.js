@@ -7,4 +7,5 @@ module.exports = {
   Internal: "internal",
   Forbidden: "forbidden",
   Mulitple: "Multiple",
+  Token: "Token"
 };

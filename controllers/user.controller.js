@@ -24,6 +24,20 @@ class UserController {
     );
     Response.defaultResponse(res, 200, response);
   }
+  static async generateRefreshToken(req, res) {
+    const { refreshToken } = req.body;
+    const response = await UserService.generateRefreshToken(
+      refreshToken
+    );
+    Response.defaultResponse(res, 200, response);
+  }
+  static async logout(req, res) {
+    const { id } = req.params;
+    const response = await UserService.logout(
+      id
+    );
+    Response.defaultResponse(res, 200, response);
+  }
 }
 
 module.exports = UserController;
