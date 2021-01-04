@@ -41,6 +41,13 @@ class Validation {
     });
     return schema.validate(body);
   }
+  static recoveryPasswordValidation(body) {
+    const schema = Joi.object({
+      newPassword: Joi.string().min(3).required(),
+      confirmedNewPassword: Joi.string().min(3).required(),
+    });
+    return schema.validate(body);
+  }
 }
 
 module.exports = Validation;

@@ -9,5 +9,7 @@ router.post("/login", UserController.login);
 router.post("/resetpassword", auth, UserController.resetPassword);
 router.post("/refreshtoken", UserController.generateRefreshToken);
 router.delete("/logout/:id", UserController.logout);
+router.post("/forgotpassword", UserController.forgotPassword);
+router.post("/recoverpassword", UserController.recoveryPassword);
 
 module.exports = router;

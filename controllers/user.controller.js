@@ -26,15 +26,25 @@ class UserController {
   }
   static async generateRefreshToken(req, res) {
     const { refreshToken } = req.body;
-    const response = await UserService.generateRefreshToken(
-      refreshToken
-    );
+    const response = await UserService.generateRefreshToken(refreshToken);
     Response.defaultResponse(res, 200, response);
   }
   static async logout(req, res) {
     const { id } = req.params;
-    const response = await UserService.logout(
-      id
+    const response = await UserService.logout(id);
+    Response.defaultResponse(res, 200, response);
+  }
+  static async forgotPassword(req, res) {
+    const { email } = req.body;
+    const response = await UserService.forgotPassword(email, req);
+    Response.defaultResponse(res, 200, response);
+  }
+  static async recoveryPassword(req, res) {
+    const { newPassword, confirmedNewPassword, token } = req.body;
+    const response = await UserService.recoveryPassword(
+      newPassword,
+      confirmedNewPassword,
+      token
     );
     Response.defaultResponse(res, 200, response);
   }
