@@ -229,7 +229,7 @@ class UserService {
         );
       }
       const token = await this.createToken(user);
-      const link = `${req.protocol}://${req.hostname}/recoverpassword/${token}`;
+      const link = `https://photofinder-lac.vercel.app/recoverpassword/${token}`;
       const msg = {
         to: email,
         from: "bandura.andriy.m@gmail.com",
